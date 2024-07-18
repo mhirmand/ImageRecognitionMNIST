@@ -7,6 +7,7 @@
 #include <numeric> // For std::iota
 #include <iomanip>
 #include <chrono>
+#include <opencv2/opencv.hpp>
 
 // Layer interface (abstract class) for neural network layers
 class Layer {
@@ -420,18 +421,104 @@ public:
     std::cout << "\nTraining completed in " << total_duration.count() << " seconds" << std::endl;
   }
 
-  float evaluate(const std::vector<std::vector<float>>& images, const std::vector<int>& labels) {
+  float evaluate(const std::vector<std::vector<float>>& images, const std::vector<int>& labels,
+    std::vector<int> & correct_indices, std::vector<int>& incorrect_indices) {
     int correct_predictions = 0;
 
+    // Predict all images and categorize them
     for (size_t i = 0; i < images.size(); ++i) {
-      auto output = forward(images[i]);
-      int predicted_class = std::max_element(output.begin(), output.end()) - output.begin();
-      if (predicted_class == labels[i]) {
-        ++correct_predictions;
+      int predicted_label = predict(images[i]);
+      if (predicted_label == labels[i]) {
+        correct_indices.push_back(i);
+        correct_predictions++;
+      }
+      else {
+        incorrect_indices.push_back(i);
       }
     }
 
     return static_cast<float>(correct_predictions) / images.size();
+  }
+
+  int predict(const std::vector<float>& image) {
+    auto output = forward(image);
+    return std::max_element(output.begin(), output.end()) - output.begin();
+  }
+
+  void display_random_test_images(const std::vector<std::vector<float>>& images,
+    const std::vector<int>& labels,
+    const std::vector<int>& indices,
+    int num_images) {
+
+    std::vector<int> newindices(indices);
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dis(0, newindices.size() - 1);
+
+    // Define the grid size
+    int grid_rows = std::ceil(std::sqrt(num_images));
+    int grid_cols = std::ceil(static_cast<float>(num_images) / grid_rows);
+
+    // std::random_device rd;
+    // std::mt19937 g(rd());
+    std::shuffle(newindices.begin(), newindices.end(), gen);
+
+    // Limit the number of images to display
+    // indices.resize(std::min(static_cast<size_t>(num_images), indices.size()));
+
+    // Create a large image to hold all the small images
+    int img_size = 28 * 5; // 28 * 5 because we're scaling up each MNIST image by 5
+    int padding = 10; // Padding between images
+    cv::Mat grid_image(grid_rows * (img_size + padding) + padding,
+      grid_cols * (img_size + padding) + padding,
+      CV_8UC3, cv::Scalar(255, 255, 255));
+
+    for (int i = 0; i < num_images; ++i) {
+      int idx = newindices[dis(gen)];
+      const auto& image = images[idx];
+      int true_label = labels[idx];
+      int predicted_label = predict(image);
+
+      // Convert the 1D vector to a 2D OpenCV Mat
+      cv::Mat display_image(28, 28, CV_32F, const_cast<float*>(image.data()));
+
+      // Normalize the image for display
+      cv::normalize(display_image, display_image, 0, 255, cv::NORM_MINMAX);
+      display_image.convertTo(display_image, CV_8U);
+
+      // Resize the image for better visibility
+      cv::resize(display_image, display_image, cv::Size(img_size, img_size), 0, 0, cv::INTER_NEAREST);
+
+      // Convert to 3-channel image
+      cv::cvtColor(display_image, display_image, cv::COLOR_GRAY2BGR);
+
+      // Add text to the image
+      cv::putText(display_image,
+        "True: " + std::to_string(true_label),
+        cv::Point(5, 20), cv::FONT_HERSHEY_SIMPLEX, 0.5,
+        predicted_label == true_label ? cv::Scalar(0, 255, 0) : cv::Scalar(0, 0, 255),
+        1);
+      cv::putText(display_image,
+        "Pred: " + std::to_string(predicted_label),
+        cv::Point(5, 40), cv::FONT_HERSHEY_SIMPLEX, 0.5,
+        predicted_label == true_label ? cv::Scalar(0, 255, 0) : cv::Scalar(0, 0, 255),
+        1);
+
+      // Calculate position in the grid
+      int row = i / grid_cols;
+      int col = i % grid_cols;
+
+      // Copy the image to the correct position in the grid
+      display_image.copyTo(grid_image(cv::Rect(col * (img_size + padding) + padding,
+        row * (img_size + padding) + padding,
+        img_size, img_size)));
+    }
+
+    // Display the grid image
+    cv::imshow("Test Images with Predictions", grid_image);
+    // cv::waitKey(0);
+    cv::destroyAllWindows();
   }
 
 private:
