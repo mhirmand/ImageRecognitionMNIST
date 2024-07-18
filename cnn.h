@@ -279,7 +279,6 @@ private:
   std::vector<float> weight_gradients, bias_gradients;
 };
 
-
 class CNN {
 public:
   CNN(const std::vector<Layer*>& layers) : layers(layers) {}
