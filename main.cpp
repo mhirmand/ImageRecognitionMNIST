@@ -23,16 +23,11 @@ int main() {
 
   // Initialize CNN
   CNN cnn({
-      new ConvLayer(1, 32, 3, 1, 28, 28),  // Input: 28x28x1, Output: 26x26x32
-      new ReLULayer(),
-      new MaxPoolLayer(2, 2, 26, 26, 32),  // Output: 13x13x32
-      new ConvLayer(32, 64, 3, 1, 13, 13), // Output: 11x11x64
-      new ReLULayer(),
-      new MaxPoolLayer(2, 2, 11, 11, 64),  // Output: 5x5x64
-      new FCLayer(5 * 5 * 64, 128),
-      new ReLULayer(),
-      new FCLayer(128, 10),
-      new SigmoidLayer()
+        new ConvLayer(1, 16, 3, 1, 28, 28),  // Input: 28x28x1, Output: 26x26x16
+        new ReLULayer(),
+        new MaxPoolLayer(2, 2, 26, 26, 16),  // Output: 13x13x16
+        new FCLayer(13 * 13 * 16, 10),
+        new SigmoidLayer()
     });
 
   // Training parameters

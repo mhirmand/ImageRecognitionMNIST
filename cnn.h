@@ -5,6 +5,8 @@
 #include <random>
 #include <iostream>
 #include <numeric> // For std::iota
+#include <iomanip>
+#include <chrono>
 
 // Layer interface (abstract class) for neural network layers
 class Layer {
@@ -14,45 +16,6 @@ public:
     const std::vector<float>& output_gradient, std::vector<float>& input_gradient) = 0;
   virtual void update(float learning_rate) = 0;
   virtual ~Layer() {}
-};
-
-class ConvLayer : public Layer {
-public:
-  ConvLayer(int in_channels, int out_channels, int kernel_size, int stride)
-    : in_channels(in_channels), out_channels(out_channels), kernel_size(kernel_size), stride(stride) {
-    // Initialize weights and biases
-    weights.resize(out_channels * in_channels * kernel_size * kernel_size);
-    biases.resize(out_channels);
-
-    // Random initialization
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::normal_distribution<> d(0, 1);
-    for (auto& w : weights) w = d(gen) * std::sqrt(2.0 / (in_channels * kernel_size * kernel_size));
-    for (auto& b : biases) b = 0;
-  }
-
-  void forward(const std::vector<float>& input, std::vector<float>& output) override {
-    // Implement convolution forward pass
-    // This is a placeholder implementation
-    output = input; // Replace with actual convolution
-  }
-
-  void backward(const std::vector<float>& input, const std::vector<float>& output,
-    const std::vector<float>& output_gradient, std::vector<float>& input_gradient) override {
-    // Implement convolution backward pass
-    // This is a placeholder implementation
-    input_gradient = output_gradient; // Replace with actual gradient computation
-  }
-
-  void update(float learning_rate) override {
-    // Update weights and biases
-    // This is a placeholder implementation
-  }
-
-private:
-  int in_channels, out_channels, kernel_size, stride;
-  std::vector<float> weights, biases;
 };
 
 class MaxPoolLayer : public Layer {
@@ -374,16 +337,33 @@ public:
     std::random_device rd;
     std::mt19937 g(rd());
 
+    std::cout << "Starting training process..." << std::endl;
+    std::cout << "Total images: " << images.size() << std::endl;
+    std::cout << "Epochs: " << epochs << std::endl;
+    std::cout << "Batch size: " << batch_size << std::endl;
+    std::cout << "Learning rate: " << learning_rate << std::endl;
+    std::cout << std::fixed << std::setprecision(4);
+
+    auto total_start_time = std::chrono::high_resolution_clock::now();
+
     for (int epoch = 0; epoch < epochs; ++epoch) {
       std::shuffle(indices.begin(), indices.end(), g);
 
       float total_loss = 0.0f;
       int correct_predictions = 0;
+      int total_batches = (images.size() + batch_size - 1) / batch_size;
 
-      for (int i = 0; i < static_cast<int>(images.size()); i += batch_size) {
-        int batch_end = std::min(static_cast<int>(images.size()), i + batch_size);
+      auto epoch_start_time = std::chrono::high_resolution_clock::now();
 
-        for (int j = i; j < batch_end; ++j) {
+      for (int batch = 0; batch < total_batches; ++batch) {
+        int start_idx = batch * batch_size;
+        int end_idx = std::min(static_cast<int>(images.size()), (batch + 1) * batch_size);
+        int current_batch_size = end_idx - start_idx;
+
+        float batch_loss = 0.0f;
+        int batch_correct = 0;
+
+        for (int j = start_idx; j < end_idx; ++j) {
           int idx = indices[j];
           const auto& image = images[idx];
           std::vector<float> target(10, 0.0f);
@@ -404,19 +384,41 @@ public:
               predicted_class = k;
             }
           }
-          total_loss += loss;
+          batch_loss += loss;
           if (predicted_class == labels[idx]) {
-            ++correct_predictions;
+            ++batch_correct;
           }
+        }
+
+        total_loss += batch_loss;
+        correct_predictions += batch_correct;
+
+        // Print batch progress
+        if ((batch + 1) % 10 == 0 || batch == total_batches - 1) {
+          float batch_accuracy = static_cast<float>(batch_correct) / current_batch_size;
+          std::cout << "Epoch " << epoch + 1 << "/" << epochs
+            << ", Batch " << batch + 1 << "/" << total_batches
+            << ", Loss: " << batch_loss / current_batch_size
+            << ", Accuracy: " << batch_accuracy * 100 << "%" << std::endl;
         }
       }
 
+      auto epoch_end_time = std::chrono::high_resolution_clock::now();
+      std::chrono::duration<double> epoch_duration = epoch_end_time - epoch_start_time;
+
       float avg_loss = total_loss / images.size();
       float accuracy = static_cast<float>(correct_predictions) / images.size();
-      std::cout << "Epoch " << epoch + 1 << "/" << epochs
-        << ", Loss: " << avg_loss
-        << ", Accuracy: " << accuracy << std::endl;
+
+      std::cout << "\nEpoch " << epoch + 1 << "/" << epochs << " completed in "
+        << epoch_duration.count() << " seconds" << std::endl;
+      std::cout << "Average Loss: " << avg_loss << std::endl;
+      std::cout << "Accuracy: " << accuracy * 100 << "%" << std::endl;
+      std::cout << std::string(50, '-') << std::endl;
     }
+
+    auto total_end_time = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> total_duration = total_end_time - total_start_time;
+    std::cout << "\nTraining completed in " << total_duration.count() << " seconds" << std::endl;
   }
 
   float evaluate(const std::vector<std::vector<float>>& images, const std::vector<int>& labels) {
