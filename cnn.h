@@ -112,24 +112,26 @@ private:
   int input_height, input_width, output_height, output_width, channels;
   std::vector<int> max_indices;
 };
+
 class FCLayer : public Layer {
 public:
   FCLayer(int input_size, int output_size)
     : input_size(input_size), output_size(output_size) {
-    // Initialize weights and biases
     weights.resize(input_size * output_size);
     biases.resize(output_size);
 
-    // Random initialization
+    // Xavier initialization
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::normal_distribution<> d(0, 1);
-    for (auto& w : weights) w = d(gen) * std::sqrt(2.0 / input_size);
-    for (auto& b : biases) b = 0;
+    std::normal_distribution<> d(0, std::sqrt(2.0 / (input_size + output_size)));
+    for (auto& w : weights) w = d(gen);
+    std::fill(biases.begin(), biases.end(), 0.0f);
+
+    weight_gradients.resize(weights.size(), 0.0f);
+    bias_gradients.resize(biases.size(), 0.0f);
   }
 
   void forward(const std::vector<float>& input, std::vector<float>& output) override {
-    // Implement fully connected layer forward pass
     output.resize(output_size);
     for (int i = 0; i < output_size; ++i) {
       output[i] = biases[i];
@@ -141,24 +143,32 @@ public:
 
   void backward(const std::vector<float>& input, const std::vector<float>& output,
     const std::vector<float>& output_gradient, std::vector<float>& input_gradient) override {
-    // Implement fully connected layer backward pass
-    input_gradient.resize(input_size);
-    std::fill(input_gradient.begin(), input_gradient.end(), 0);
+    input_gradient.resize(input_size, 0.0f);
+    std::fill(weight_gradients.begin(), weight_gradients.end(), 0.0f);
+    std::fill(bias_gradients.begin(), bias_gradients.end(), 0.0f);
+
     for (int i = 0; i < output_size; ++i) {
       for (int j = 0; j < input_size; ++j) {
-        input_gradient[j] += output_gradient[i] * weights[i * input_size + j];
+        weight_gradients[i * input_size + j] += input[j] * output_gradient[i];
+        input_gradient[j] += weights[i * input_size + j] * output_gradient[i];
       }
+      bias_gradients[i] += output_gradient[i];
     }
   }
 
   void update(float learning_rate) override {
-    // Update weights and biases
-    // This is a placeholder implementation
+    for (size_t i = 0; i < weights.size(); ++i) {
+      weights[i] -= learning_rate * weight_gradients[i];
+    }
+    for (size_t i = 0; i < biases.size(); ++i) {
+      biases[i] -= learning_rate * bias_gradients[i];
+    }
   }
 
 private:
   int input_size, output_size;
   std::vector<float> weights, biases;
+  std::vector<float> weight_gradients, bias_gradients;
 };
 
 class ReLULayer : public Layer{
