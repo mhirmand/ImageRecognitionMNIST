@@ -23,10 +23,10 @@ int main() {
 
   // Initialize CNN
   CNN cnn({
-      new ConvLayer(1, 32, 3, 1),  // Input: 28x28x1, Output: 26x26x32
+      new ConvLayer(1, 32, 3, 1, 28, 28),  // Input: 28x28x1, Output: 26x26x32
       new ReLULayer(),
       new MaxPoolLayer(2, 2),      // Output: 13x13x32
-      new ConvLayer(32, 64, 3, 1), // Output: 11x11x64
+      new ConvLayer(32, 64, 3, 1, 13, 13), // Output: 11x11x64
       new ReLULayer(),
       new MaxPoolLayer(2, 2),      // Output: 5x5x64
       new FCLayer(5 * 5 * 64, 128),
