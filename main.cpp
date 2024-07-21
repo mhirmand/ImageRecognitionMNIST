@@ -61,8 +61,8 @@ int main() {
   float accuracy = cnn.evaluate(test_images, test_labels, correct_indices, incorrect_indices);
   std::cout << "Test accuracy: " << accuracy * 100 << "%" << std::endl;
 
-  cnn.display_random_test_images(test_images, test_labels, correct_indices, 16);
-  cnn.display_random_test_images(test_images, test_labels, incorrect_indices, 16);
+  // cnn.display_random_test_images(test_images, test_labels, correct_indices, 16);
+  // cnn.display_random_test_images(test_images, test_labels, incorrect_indices, 16);
 
   return 0;
 }
