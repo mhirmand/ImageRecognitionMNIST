@@ -103,3 +103,59 @@ void ConvLayer::update(float learning_rate) {
     biases[i] -= learning_rate * bias_gradients[i];
   }
 }
+
+
+
+// MaxPoolLayer implementation
+MaxPoolLayer::MaxPoolLayer(int kernel_size, int stride,
+  int input_height, int input_width, int channels)
+  : kernel_size(kernel_size), stride(stride),
+  input_height(input_height), input_width(input_width), channels(channels) {
+
+  output_height = (input_height - kernel_size) / stride + 1;
+  output_width = (input_width - kernel_size) / stride + 1;
+}
+
+void MaxPoolLayer::forward(const std::vector<float>& input, std::vector<float>& output) {
+  output.resize(channels * output_height * output_width);
+  max_indices.resize(output.size());
+
+  for (int c = 0; c < channels; ++c) {
+    for (int oh = 0; oh < output_height; ++oh) {
+      for (int ow = 0; ow < output_width; ++ow) {
+        int out_idx = (c * output_height + oh) * output_width + ow;
+        float max_val = -std::numeric_limits<float>::max();
+        int max_idx = -1;
+
+        for (int kh = 0; kh < kernel_size; ++kh) {
+          for (int kw = 0; kw < kernel_size; ++kw) {
+            int ih = oh * stride + kh;
+            int iw = ow * stride + kw;
+            int in_idx = (c * input_height + ih) * input_width + iw;
+
+            if (input[in_idx] > max_val) {
+              max_val = input[in_idx];
+              max_idx = in_idx;
+            }
+          }
+        }
+
+        output[out_idx] = max_val;
+        max_indices[out_idx] = max_idx;
+      }
+    }
+  }
+}
+
+void MaxPoolLayer::backward(const std::vector<float>& input, const std::vector<float>& output,
+  const std::vector<float>& output_gradient, std::vector<float>& input_gradient) {
+  input_gradient.resize(input.size(), 0);
+
+  for (size_t i = 0; i < output_gradient.size(); ++i) {
+    input_gradient[max_indices[i]] += output_gradient[i];
+  }
+}
+
+void MaxPoolLayer::update(float learning_rate) override {
+  // MaxPool has no parameters to update
+}
