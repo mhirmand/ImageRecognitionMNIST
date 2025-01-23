@@ -156,7 +156,7 @@ void MaxPoolLayer::backward(const std::vector<float>& input, const std::vector<f
   }
 }
 
-void MaxPoolLayer::update(float learning_rate) override {
+void MaxPoolLayer::update(float learning_rate) {
   // MaxPool has no parameters to update
 }
 
@@ -220,12 +220,12 @@ CNN::CNN(std::vector<std::unique_ptr<Layer>> layers) : layers(std::move(layers))
 
 std::vector<float> CNN::forward(const std::vector<float>& input) {
   std::vector<float> current = input;
-  for (auto layer : layers) {
+  for (auto &layer : layers) {
     std::vector<float> next;
     layer->forward(current, next);
     current = std::move(next);
   }
-  return current; ..
+  return current; 
 }
 
 void CNN::backward(const std::vector<float>& input, const std::vector<float>& target) {
@@ -253,7 +253,7 @@ void CNN::backward(const std::vector<float>& input, const std::vector<float>& ta
 }
 
 void CNN::update(float learning_rate) {
-  for (auto layer : layers) {
+  for (auto &layer : layers) {
     layer->update(learning_rate);
   }
 }
@@ -271,7 +271,7 @@ void CNN::train(const std::vector<std::vector<float>>& images,
   std::cout << "Epochs: " << epochs << std::endl;
   std::cout << "Batch size: " << batch_size << std::endl;
   std::cout << "Learning rate: " << learning_rate << std::endl;
-  std::cout << std::fixed << std::setprecision(4);
+  // std::cout << std::fixed << std::setprecision(4);
 
   auto total_start_time = std::chrono::high_resolution_clock::now();
 

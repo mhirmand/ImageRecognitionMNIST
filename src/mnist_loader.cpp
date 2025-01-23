@@ -94,4 +94,3 @@ std::vector<int> MNISTLoader::readLabelFile(const std::string& file_path) {
 
   return labels;
 }
-};

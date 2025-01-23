@@ -28,14 +28,14 @@ int main(int argc, char* argv[]) {
     Config cfg = parse_arguments(argc, argv);
 
     MNISTLoader mnist(cfg.data_path);
-    auto [train_images, train_labels] = mnist.loadTrainingData();
-    auto [test_images, test_labels] = mnist.loadTestData();
+    auto train_data = mnist.loadTrainingData();
+    auto test_data= mnist.loadTestData();
 
     auto cnn = create_default_cnn();
-    cnn->train(train_images, train_labels, cfg.epochs, cfg.batch_size, cfg.learning_rate);
+    cnn->train(std::get<0>(train_data), std::get<1>(train_data), cfg.epochs, cfg.batch_size, cfg.learning_rate);
 
     std::vector<int> correct, incorrect;
-    float accuracy = cnn->evaluate(test_images, test_labels, correct, incorrect);
+    float accuracy = cnn->evaluate(std::get<0>(test_data), std::get<1>(test_data), correct, incorrect);
     std::cout << "Test accuracy: " << accuracy * 100 << "%\n";
 
   }
