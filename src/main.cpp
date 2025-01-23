@@ -1,54 +1,47 @@
-
-
-// main.cpp
 #include <iostream>
 #include <vector>
-#include <random>
-#include <algorithm>
-#include <cmath>
-#include "mnist_loader.h"
+#include <string>
 #include "cnn.h"
+#include "mnist_loader.h"
 
-
-int main() {
-  // Load MNIST dataset
-  MNISTLoader mnist("C:\\Users\\mohammadreza.hirmand\\Music\\Personal\\Learning\\ComputerVision\\archive");
-  auto trainData = mnist.loadTrainingData();
-  auto testData = mnist.loadTestData();
-
-  auto train_images = std::get<0>(trainData);
-  auto train_labels = std::get<1>(trainData);
-  auto test_images = std::get<0>(testData);
-  auto test_labels = std::get<1>(testData);
-
-  // Initialize CNN with 5 layers
-  CNN cnn({
-        new ConvLayer(1, 16, 3, 1, 28, 28),  // Input: 28x28x1, Output: 26x26x16
-        new ReLULayer(),
-        new MaxPoolLayer(2, 2, 26, 26, 16),  // Output: 13x13x16
-        new FCLayer(13 * 13 * 16, 10),
-        new SigmoidLayer()
-    });
-
-  // Training parameters
+struct Config {
+  std::string data_path;
   int epochs = 5;
-  int batch_size = 1000;
-  float learning_rate = 0.01;
+  int batch_size = 100;
+  float learning_rate = 0.01f;
+};
 
-  // Train the network
-  cnn.train(train_images, train_labels, epochs, batch_size, learning_rate);
+Config parse_arguments(int argc, char* argv[]) {
+  Config cfg;
+  if (argc < 2) {
+    throw std::runtime_error("Usage: " + std::string(argv[0]) + " <dataset_path> [epochs] [batch_size] [learning_rate]");
+  }
+  cfg.data_path = argv[1];
+  if (argc > 2) cfg.epochs = std::stoi(argv[2]);
+  if (argc > 3) cfg.batch_size = std::stoi(argv[3]);
+  if (argc > 4) cfg.learning_rate = std::stof(argv[4]);
+  return cfg;
+}
 
-  // Evaluate on test set
-  std::vector<int> correct_indices;
-  correct_indices.reserve(test_labels.size());
-  std::vector<int> incorrect_indices;
-  incorrect_indices.reserve(test_labels.size());
+int main(int argc, char* argv[]) {
+  try {
+    Config cfg = parse_arguments(argc, argv);
 
-  float accuracy = cnn.evaluate(test_images, test_labels, correct_indices, incorrect_indices);
-  std::cout << "Test accuracy: " << accuracy * 100 << "%" << std::endl;
+    MNISTLoader mnist(cfg.data_path);
+    auto [train_images, train_labels] = mnist.loadTrainingData();
+    auto [test_images, test_labels] = mnist.loadTestData();
 
-  // cnn.display_random_test_images(test_images, test_labels, correct_indices, 16);
-  // cnn.display_random_test_images(test_images, test_labels, incorrect_indices, 16);
+    auto cnn = create_default_cnn();
+    cnn->train(train_images, train_labels, cfg.epochs, cfg.batch_size, cfg.learning_rate);
 
-  return 0;
+    std::vector<int> correct, incorrect;
+    float accuracy = cnn->evaluate(test_images, test_labels, correct, incorrect);
+    std::cout << "Test accuracy: " << accuracy * 100 << "%\n";
+
+  }
+  catch (const std::exception& e) {
+    std::cerr << "Error: " << e.what() << "\n";
+    return EXIT_FAILURE;
+  }
+  return EXIT_SUCCESS;
 }
