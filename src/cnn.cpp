@@ -375,3 +375,13 @@ int CNN::predict(const std::vector<float>& image) {
   auto output = forward(image);
   return std::max_element(output.begin(), output.end()) - output.begin();
 }
+
+std::unique_ptr<CNN> create_default_cnn() {
+  std::vector<std::unique_ptr<Layer>> layers;
+  layers.push_back(std::make_unique<ConvLayer>(1, 16, 3, 1, 28, 28));
+  layers.push_back(std::make_unique<ReLULayer>());
+  layers.push_back(std::make_unique<MaxPoolLayer>(2, 2, 26, 26, 16));
+  layers.push_back(std::make_unique<FCLayer>(13 * 13 * 16, 10));
+  layers.push_back(std::make_unique<SigmoidLayer>());
+  return std::make_unique<CNN>(std::move(layers));
+}
