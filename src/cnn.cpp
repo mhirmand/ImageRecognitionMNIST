@@ -159,3 +159,57 @@ void MaxPoolLayer::backward(const std::vector<float>& input, const std::vector<f
 void MaxPoolLayer::update(float learning_rate) override {
   // MaxPool has no parameters to update
 }
+
+
+// FCLayer implementation
+FCLayer::FCLayer(int input_size, int output_size)
+  : input_size(input_size), output_size(output_size) {
+  initialize_parameters();
+}
+
+void FCLayer::initialize_parameters() {
+  weights.resize(input_size * output_size);
+  biases.resize(output_size, 0.0f);
+
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::normal_distribution<> d(0, std::sqrt(2.0 / (input_size + output_size)));
+  for (auto& w : weights) w = d(gen);
+
+  weight_gradients.resize(weights.size(), 0.0f);
+  bias_gradients.resize(biases.size(), 0.0f);
+}
+
+void FCLayer::forward(const std::vector<float>& input, std::vector<float>& output) {
+  output.resize(output_size);
+  for (int i = 0; i < output_size; ++i) {
+    output[i] = biases[i];
+    for (int j = 0; j < input_size; ++j) {
+      output[i] += input[j] * weights[i * input_size + j];
+    }
+  }
+}
+
+void FCLayer::backward(const std::vector<float>& input, const std::vector<float>& output,
+  const std::vector<float>& output_gradient, std::vector<float>& input_gradient) {
+  input_gradient.resize(input_size, 0.0f);
+  std::fill(weight_gradients.begin(), weight_gradients.end(), 0.0f);
+  std::fill(bias_gradients.begin(), bias_gradients.end(), 0.0f);
+
+  for (int i = 0; i < output_size; ++i) {
+    for (int j = 0; j < input_size; ++j) {
+      weight_gradients[i * input_size + j] += input[j] * output_gradient[i];
+      input_gradient[j] += weights[i * input_size + j] * output_gradient[i];
+    }
+    bias_gradients[i] += output_gradient[i];
+  }
+}
+
+void FCLayer::update(float learning_rate) {
+  for (size_t i = 0; i < weights.size(); ++i) {
+    weights[i] -= learning_rate * weight_gradients[i];
+  }
+  for (size_t i = 0; i < biases.size(); ++i) {
+    biases[i] -= learning_rate * bias_gradients[i];
+  }
+}
