@@ -17,7 +17,7 @@ public:
   void forward(const std::vector<float>& input, std::vector<float>& output) override;
   void backward(const std::vector<float>& input, const std::vector<float>& output,
     const std::vector<float>& output_gradient, std::vector<float>& input_gradient) override;
-  void update(float learning_rate) override {}
+  void update(float learning_rate) override;
 
 private:
   int kernel_size, stride;
