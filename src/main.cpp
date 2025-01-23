@@ -1,16 +1,32 @@
+// main.cpp
+// This file serves as the entry point for running the Convolutional Neural Network (CNN) application.
+
+
 #include <iostream>
 #include <vector>
 #include <string>
 #include "cnn.h"
 #include "mnist_loader.h"
 
+/**
+ * Config: Structure to hold configurable parameters for the program.
+ * - data_path: Path to the MNIST dataset.
+ * - epochs: Number of training iterations (default: 5).
+ * - batch_size: Number of samples per training batch (default: 1000).
+ * - learning_rate: Step size for gradient descent (default: 0.01).
+ */
 struct Config {
   std::string data_path;
   int epochs = 5;
-  int batch_size = 100;
+  int batch_size = 1000;
   float learning_rate = 0.01f;
 };
 
+/**
+ * parse_arguments: Parses command-line arguments.
+ * - Validates input and extracts dataset path, epochs, batch size, and learning rate.
+ * - Throws runtime_error for invalid or insufficient arguments.
+ */
 Config parse_arguments(int argc, char* argv[]) {
   Config cfg;
   if (argc < 2) {
@@ -23,6 +39,16 @@ Config parse_arguments(int argc, char* argv[]) {
   return cfg;
 }
 
+/**
+ * main: Entry point for the application.
+ * Workflow:
+ * - Parses program configuration using command-line arguments.
+ * - Loads MNIST dataset using MNISTLoader.
+ * - Initializes the CNN with a default architecture.
+ * - Trains the CNN on the training dataset for specified epochs.
+ * - Evaluates the CNN on the test dataset and reports accuracy.
+ * - Handles exceptions and outputs error messages if needed.
+ */
 int main(int argc, char* argv[]) {
   try {
     Config cfg = parse_arguments(argc, argv);

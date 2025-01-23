@@ -1,26 +1,52 @@
+// mnist_loader.cpp
+// This file handles the loading of the MNIST dataset in IDX format.
+
 #include "mnist_loader.h"
 #include <fstream>
 #include <stdexcept>
 
+/**
+ * MNISTLoader: Class for loading MNIST dataset.
+ * - data_path: Base directory containing the MNIST files.
+ * - Throws invalid_argument if the path is empty.
+ */
 MNISTLoader::MNISTLoader(const std::string& data_path) : data_path(data_path) {
   if (data_path.empty()) {
     throw std::invalid_argument("Dataset path cannot be empty");
   }
 }
 
+/**
+ * swapEndian: Utility function for converting 32-bit integers from big-endian to host byte order.
+ */
 uint32_t MNISTLoader::swapEndian(uint32_t val) {
   val = ((val << 8) & 0xFF00FF00) | ((val >> 8) & 0xFF00FF);
   return (val << 16) | (val >> 16);
 }
 
+/**
+ * loadTrainingData: Loads training images and labels.
+ * - Reads files "train-images.idx3-ubyte" and "train-labels.idx1-ubyte".
+ * - Returns tuple of images (as normalized floats) and labels.
+ */
 std::tuple<std::vector<std::vector<float>>, std::vector<int>> MNISTLoader::loadTrainingData() {
   return loadData("train-images.idx3-ubyte", "train-labels.idx1-ubyte");
 }
 
+/**
+ * loadTestData: Loads test images and labels.
+ * - Reads files "t10k-images.idx3-ubyte" and "t10k-labels.idx1-ubyte".
+ * - Returns tuple of images (as normalized floats) and labels.
+ */
 std::tuple<std::vector<std::vector<float>>, std::vector<int>> MNISTLoader::loadTestData() {
   return loadData("t10k-images.idx3-ubyte", "t10k-labels.idx1-ubyte");
 }
 
+/**
+ * loadData: Helper function for loading image and label files.
+ * - Validates that the number of images matches the number of labels.
+ * - Throws runtime_error for mismatches or invalid files.
+ */
 std::tuple<std::vector<std::vector<float>>, std::vector<int>> MNISTLoader::loadData(
   const std::string& images_file, const std::string& labels_file) {
   auto images = readImageFile(data_path + "\\" + images_file);
@@ -33,6 +59,12 @@ std::tuple<std::vector<std::vector<float>>, std::vector<int>> MNISTLoader::loadD
   return { images, labels };
 }
 
+/**
+ * readImageFile: Reads and processes an MNIST image file.
+ * - Verifies the magic number and extracts image dimensions.
+ * - Normalizes pixel values to the range [0, 1].
+ * - Throws runtime_error if the file cannot be opened or is invalid.
+ */
 std::vector<std::vector<float>> MNISTLoader::readImageFile(const std::string& file_path) {
   std::ifstream file(file_path, std::ios::binary);
   if (!file) {
@@ -67,6 +99,11 @@ std::vector<std::vector<float>> MNISTLoader::readImageFile(const std::string& fi
   return images;
 }
 
+/**
+ * readLabelFile: Reads and processes an MNIST label file.
+ * - Verifies the magic number and extracts labels.
+ * - Throws runtime_error if the file cannot be opened or is invalid.
+ */
 std::vector<int> MNISTLoader::readLabelFile(const std::string& file_path) {
   std::ifstream file(file_path, std::ios::binary);
   if (!file) {

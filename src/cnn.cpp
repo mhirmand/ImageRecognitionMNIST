@@ -1,3 +1,6 @@
+// cnn.cpp
+// This file implements the core components of a Convolutional Neural Network (CNN).
+
 #include "cnn.h"
 #include "layers/conv_layer.h"
 #include "layers/maxpool_layer.h"
@@ -10,7 +13,14 @@
 #include <random>
 #include <algorithm>
 
-// ConvLayer implementation
+/**
+ * ConvLayer: Implements a 2D convolutional layer.
+ * Key functionalities:
+ * - initialize_parameters: Initialization of weights and biases with random values.
+ * - Forward pass: Performs convolutional operations.
+ * - Backward pass: Computes gradients for weights, biases, and input.
+ * - Parameter update: Adjusts weights and biases using gradients.
+ */
 ConvLayer::ConvLayer(int in_channels, int out_channels, int kernel_size,
   int stride, int input_height, int input_width)
   : in_channels(in_channels), out_channels(out_channels),
@@ -106,7 +116,13 @@ void ConvLayer::update(float learning_rate) {
 
 
 
-// MaxPoolLayer implementation
+/**
+ * MaxPoolLayer: Implements a 2D max-pooling layer.
+ * Key functionalities:
+ * - Forward pass: Applies max-pooling to reduce spatial dimensions.
+ * - Backward pass: Propagates gradients to input.
+ * - No parameters to update.
+ */
 MaxPoolLayer::MaxPoolLayer(int kernel_size, int stride,
   int input_height, int input_width, int channels)
   : kernel_size(kernel_size), stride(stride),
@@ -161,7 +177,14 @@ void MaxPoolLayer::update(float learning_rate) {
 }
 
 
-// FCLayer implementation
+/**
+ * FCLayer: Fully connected layer.
+ * Key functionalities:
+ * - Initialization of weights and biases with random values.
+ * - Forward pass: Computes linear transformation.
+ * - Backward pass: Calculates gradients for weights, biases, and input.
+ * - Parameter update: Adjusts weights and biases using gradients.
+ */
 FCLayer::FCLayer(int input_size, int output_size)
   : input_size(input_size), output_size(output_size) {
   initialize_parameters();
@@ -215,7 +238,15 @@ void FCLayer::update(float learning_rate) {
 }
 
 
-// CNN implementation
+/**
+ * CNN: Represents the entire Convolutional Neural Network.
+ * Features:
+ * - Flexible architecture using various layer types.
+ * - Forward pass to compute predictions.
+ * - Backward pass for gradient computation and backpropagation.
+ * - Training functionality with batching and shuffling of data.
+ * - Evaluation to measure accuracy on test datasets.
+ */
 CNN::CNN(std::vector<std::unique_ptr<Layer>> layers) : layers(std::move(layers)) {}
 
 std::vector<float> CNN::forward(const std::vector<float>& input) {
