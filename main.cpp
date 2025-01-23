@@ -45,7 +45,7 @@ int main() {
   //  });
 
   // Training parameters
-  int epochs = 1;
+  int epochs = 5;
   int batch_size = 1000;
   float learning_rate = 0.01;
 
