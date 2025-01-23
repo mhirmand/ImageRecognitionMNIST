@@ -42,12 +42,17 @@ Config parse_arguments(int argc, char* argv[]) {
 /**
  * main: Entry point for the application.
  * Workflow:
- * - Parses program configuration using command-line arguments.
- * - Loads MNIST dataset using MNISTLoader.
- * - Initializes the CNN with a default architecture.
- * - Trains the CNN on the training dataset for specified epochs.
- * - Evaluates the CNN on the test dataset and reports accuracy.
- * - Handles exceptions and outputs error messages if needed.
+ * 1. Parses program configuration using command-line arguments.
+ * 2. Loads the MNIST dataset using MNISTLoader.
+ *    - The training data is split into images and labels.
+ * 3. Initializes the CNN with the following default architecture:
+ *    - ConvLayer -> ReLULayer -> MaxPoolLayer -> FCLayer -> SigmoidLayer
+ * 4. Trains the CNN on the training dataset for a specified number of epochs.
+ *    - The training process includes forward propagation, backpropagation, and parameter updates.
+ *    - Prints batch-wise loss and accuracy.
+ * 5. Evaluates the CNN on the test dataset.
+ *    - Computes accuracy and reports it to the console.
+ * 6. Handles exceptions and outputs error messages if encountered.
  */
 int main(int argc, char* argv[]) {
   try {

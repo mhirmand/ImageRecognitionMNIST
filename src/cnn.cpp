@@ -14,6 +14,207 @@
 #include <algorithm>
 
 /**
+ * Convolutional Neural Network (CNN) Overview:
+ * The CNN architecture defined in the code is designed for the MNIST digit classification task.
+ *
+ * 1. Input: The input images are 28x28 grayscale images (flattened into 784-element vectors).
+ * 2. Default Architecture with 5 layers: ConvLayer -> ReLULayer -> MaxPoolLayer -> FCLayer -> SigmoidLayer
+ *    - **ConvLayer**:
+ *      - 1 input channel (grayscale images).
+ *      - 16 output channels with a kernel size of 3x3 and stride 1.
+ *      - Produces feature maps of size 26x26.
+ *    - **ReLULayer**: Applies the ReLU activation function to introduce non-linearity.
+ *    - **MaxPoolLayer**:
+ *      - Reduces the spatial size of feature maps to 13x13 using a pooling window of 2x2 and stride 2.
+ *    - **FCLayer**:
+ *      - Fully connected layer with 16x13x13=2704 inputs and 10 outputs (one for each digit class).
+ *    - **SigmoidLayer**: Applies the sigmoid activation function to produce normalized outputs.
+ * 3. Training Process:
+ *    - Optimizes the network using Mean Squared Error (MSE) loss.
+ *    - Parameters (weights and biases) are updated using gradient descent with the specified learning rate.
+ * 4. Output: The network outputs probabilities for each of the 10 digit classes (0-9).
+ */
+
+std::unique_ptr<CNN> create_default_cnn() {
+  std::vector<std::unique_ptr<Layer>> layers;
+  layers.push_back(std::make_unique<ConvLayer>(1, 16, 3, 1, 28, 28));
+  layers.push_back(std::make_unique<ReLULayer>());
+  layers.push_back(std::make_unique<MaxPoolLayer>(2, 2, 26, 26, 16));
+  layers.push_back(std::make_unique<FCLayer>(13 * 13 * 16, 10));
+  layers.push_back(std::make_unique<SigmoidLayer>());
+  return std::make_unique<CNN>(std::move(layers));
+}
+
+/**
+ * CNN: Represents the entire Convolutional Neural Network.
+ * Features:
+ * - Flexible architecture using various layer types.
+ * - Forward pass to compute predictions.
+ * - Backward pass for gradient computation and backpropagation.
+ * - Training functionality with batching and shuffling of data.
+ * - Evaluation to measure accuracy on test datasets.
+ */
+CNN::CNN(std::vector<std::unique_ptr<Layer>> layers) : layers(std::move(layers)) {}
+
+std::vector<float> CNN::forward(const std::vector<float>& input) {
+  std::vector<float> current = input;
+  for (auto& layer : layers) {
+    std::vector<float> next;
+    layer->forward(current, next);
+    current = std::move(next);
+  }
+  return current;
+}
+
+void CNN::backward(const std::vector<float>& input, const std::vector<float>& target) {
+  std::vector<std::vector<float>> layer_inputs(layers.size() + 1);
+  layer_inputs[0] = input;
+
+  // Forward pass
+  for (size_t i = 0; i < layers.size(); ++i) {
+    layers[i]->forward(layer_inputs[i], layer_inputs[i + 1]);
+  }
+
+  // Compute output gradient
+  std::vector<float> output_gradient(layer_inputs.back().size());
+  for (size_t i = 0; i < output_gradient.size(); ++i) {
+    output_gradient[i] = layer_inputs.back()[i] - target[i];
+  }
+
+  // Backward pass
+  std::vector<float> current_gradient = output_gradient;
+  for (int i = layers.size() - 1; i >= 0; --i) {
+    std::vector<float> prev_gradient;
+    layers[i]->backward(layer_inputs[i], layer_inputs[i + 1], current_gradient, prev_gradient);
+    current_gradient = std::move(prev_gradient);
+  }
+}
+
+void CNN::update(float learning_rate) {
+  for (auto& layer : layers) {
+    layer->update(learning_rate);
+  }
+}
+
+void CNN::train(const std::vector<std::vector<float>>& images,
+  const std::vector<int>& labels,
+  int epochs, int batch_size, float learning_rate) {
+  std::vector<int> indices(images.size());
+  std::iota(indices.begin(), indices.end(), 0);
+  std::random_device rd;
+  std::mt19937 g(rd());
+
+  std::cout << "Starting training process..." << std::endl;
+  std::cout << "Total images: " << images.size() << std::endl;
+  std::cout << "Epochs: " << epochs << std::endl;
+  std::cout << "Batch size: " << batch_size << std::endl;
+  std::cout << "Learning rate: " << learning_rate << std::endl;
+  // std::cout << std::fixed << std::setprecision(4);
+
+  auto total_start_time = std::chrono::high_resolution_clock::now();
+
+  for (int epoch = 0; epoch < epochs; ++epoch) {
+    std::shuffle(indices.begin(), indices.end(), g);
+
+    float total_loss = 0.0f;
+    int correct_predictions = 0;
+    int total_batches = (images.size() + batch_size - 1) / batch_size;
+
+    auto epoch_start_time = std::chrono::high_resolution_clock::now();
+
+    for (int batch = 0; batch < total_batches; ++batch) {
+      int start_idx = batch * batch_size;
+      int end_idx = std::min(static_cast<int>(images.size()), (batch + 1) * batch_size);
+      int current_batch_size = end_idx - start_idx;
+
+      float batch_loss = 0.0f;
+      int batch_correct = 0;
+
+      for (int j = start_idx; j < end_idx; ++j) {
+        int idx = indices[j];
+        const auto& image = images[idx];
+        std::vector<float> target(10, 0.0f);
+        target[labels[idx]] = 1.0f;
+
+        auto output = forward(image);
+        backward(image, target);
+        update(learning_rate);
+
+        // Compute loss and accuracy
+        float loss = 0.0f;
+        int predicted_class = 0;
+        float max_output = output[0];
+        for (size_t k = 0; k < output.size(); ++k) {
+          loss += std::pow(output[k] - target[k], 2);
+          if (output[k] > max_output) {
+            max_output = output[k];
+            predicted_class = k;
+          }
+        }
+        batch_loss += loss;
+        if (predicted_class == labels[idx]) {
+          ++batch_correct;
+        }
+      }
+
+      total_loss += batch_loss;
+      correct_predictions += batch_correct;
+
+      // Print batch progress
+      if ((batch + 1) % 10 == 0 || batch == total_batches - 1) {
+        float batch_accuracy = static_cast<float>(batch_correct) / current_batch_size;
+        std::cout << "Epoch " << epoch + 1 << "/" << epochs
+          << ", Batch " << batch + 1 << "/" << total_batches
+          << ", Loss: " << batch_loss / current_batch_size
+          << ", Accuracy: " << batch_accuracy * 100 << "%" << std::endl;
+      }
+    }
+
+    auto epoch_end_time = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> epoch_duration = epoch_end_time - epoch_start_time;
+
+    float avg_loss = total_loss / images.size();
+    float accuracy = static_cast<float>(correct_predictions) / images.size();
+
+    std::cout << "\nEpoch " << epoch + 1 << "/" << epochs << " completed in "
+      << epoch_duration.count() << " seconds" << std::endl;
+    std::cout << "Average Loss: " << avg_loss << std::endl;
+    std::cout << "Accuracy: " << accuracy * 100 << "%" << std::endl;
+    std::cout << std::string(50, '-') << std::endl;
+  }
+
+  auto total_end_time = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double> total_duration = total_end_time - total_start_time;
+  std::cout << "\nTraining completed in " << total_duration.count() << " seconds" << std::endl;
+
+}
+
+float CNN::evaluate(const std::vector<std::vector<float>>& images, const std::vector<int>& labels,
+  std::vector<int>& correct_indices, std::vector<int>& incorrect_indices) {
+  int correct_predictions = 0;
+
+  // Predict all images and categorize them
+  for (size_t i = 0; i < images.size(); ++i) {
+    int predicted_label = predict(images[i]);
+    if (predicted_label == labels[i]) {
+      correct_indices.push_back(i);
+      correct_predictions++;
+    }
+    else {
+      incorrect_indices.push_back(i);
+    }
+  }
+
+  return static_cast<float>(correct_predictions) / images.size();
+}
+
+
+int CNN::predict(const std::vector<float>& image) {
+  auto output = forward(image);
+  return std::max_element(output.begin(), output.end()) - output.begin();
+}
+
+/**
  * ConvLayer: Implements a 2D convolutional layer.
  * Key functionalities:
  * - initialize_parameters: Initialization of weights and biases with random values.
@@ -237,182 +438,3 @@ void FCLayer::update(float learning_rate) {
   }
 }
 
-
-/**
- * CNN: Represents the entire Convolutional Neural Network.
- * Features:
- * - Flexible architecture using various layer types.
- * - Forward pass to compute predictions.
- * - Backward pass for gradient computation and backpropagation.
- * - Training functionality with batching and shuffling of data.
- * - Evaluation to measure accuracy on test datasets.
- */
-CNN::CNN(std::vector<std::unique_ptr<Layer>> layers) : layers(std::move(layers)) {}
-
-std::vector<float> CNN::forward(const std::vector<float>& input) {
-  std::vector<float> current = input;
-  for (auto &layer : layers) {
-    std::vector<float> next;
-    layer->forward(current, next);
-    current = std::move(next);
-  }
-  return current; 
-}
-
-void CNN::backward(const std::vector<float>& input, const std::vector<float>& target) {
-  std::vector<std::vector<float>> layer_inputs(layers.size() + 1);
-  layer_inputs[0] = input;
-
-  // Forward pass
-  for (size_t i = 0; i < layers.size(); ++i) {
-    layers[i]->forward(layer_inputs[i], layer_inputs[i + 1]);
-  }
-
-  // Compute output gradient
-  std::vector<float> output_gradient(layer_inputs.back().size());
-  for (size_t i = 0; i < output_gradient.size(); ++i) {
-    output_gradient[i] = layer_inputs.back()[i] - target[i];
-  }
-
-  // Backward pass
-  std::vector<float> current_gradient = output_gradient;
-  for (int i = layers.size() - 1; i >= 0; --i) {
-    std::vector<float> prev_gradient;
-    layers[i]->backward(layer_inputs[i], layer_inputs[i + 1], current_gradient, prev_gradient);
-    current_gradient = std::move(prev_gradient);
-  }
-}
-
-void CNN::update(float learning_rate) {
-  for (auto &layer : layers) {
-    layer->update(learning_rate);
-  }
-}
-
-void CNN::train(const std::vector<std::vector<float>>& images,
-  const std::vector<int>& labels,
-  int epochs, int batch_size, float learning_rate) {
-  std::vector<int> indices(images.size());
-  std::iota(indices.begin(), indices.end(), 0);
-  std::random_device rd;
-  std::mt19937 g(rd());
-
-  std::cout << "Starting training process..." << std::endl;
-  std::cout << "Total images: " << images.size() << std::endl;
-  std::cout << "Epochs: " << epochs << std::endl;
-  std::cout << "Batch size: " << batch_size << std::endl;
-  std::cout << "Learning rate: " << learning_rate << std::endl;
-  // std::cout << std::fixed << std::setprecision(4);
-
-  auto total_start_time = std::chrono::high_resolution_clock::now();
-
-  for (int epoch = 0; epoch < epochs; ++epoch) {
-    std::shuffle(indices.begin(), indices.end(), g);
-
-    float total_loss = 0.0f;
-    int correct_predictions = 0;
-    int total_batches = (images.size() + batch_size - 1) / batch_size;
-
-    auto epoch_start_time = std::chrono::high_resolution_clock::now();
-
-    for (int batch = 0; batch < total_batches; ++batch) {
-      int start_idx = batch * batch_size;
-      int end_idx = std::min(static_cast<int>(images.size()), (batch + 1) * batch_size);
-      int current_batch_size = end_idx - start_idx;
-
-      float batch_loss = 0.0f;
-      int batch_correct = 0;
-
-      for (int j = start_idx; j < end_idx; ++j) {
-        int idx = indices[j];
-        const auto& image = images[idx];
-        std::vector<float> target(10, 0.0f);
-        target[labels[idx]] = 1.0f;
-
-        auto output = forward(image);
-        backward(image, target);
-        update(learning_rate);
-
-        // Compute loss and accuracy
-        float loss = 0.0f;
-        int predicted_class = 0;
-        float max_output = output[0];
-        for (size_t k = 0; k < output.size(); ++k) {
-          loss += std::pow(output[k] - target[k], 2);
-          if (output[k] > max_output) {
-            max_output = output[k];
-            predicted_class = k;
-          }
-        }
-        batch_loss += loss;
-        if (predicted_class == labels[idx]) {
-          ++batch_correct;
-        }
-      }
-
-      total_loss += batch_loss;
-      correct_predictions += batch_correct;
-
-      // Print batch progress
-      if ((batch + 1) % 10 == 0 || batch == total_batches - 1) {
-        float batch_accuracy = static_cast<float>(batch_correct) / current_batch_size;
-        std::cout << "Epoch " << epoch + 1 << "/" << epochs
-          << ", Batch " << batch + 1 << "/" << total_batches
-          << ", Loss: " << batch_loss / current_batch_size
-          << ", Accuracy: " << batch_accuracy * 100 << "%" << std::endl;
-      }
-    }
-
-    auto epoch_end_time = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> epoch_duration = epoch_end_time - epoch_start_time;
-
-    float avg_loss = total_loss / images.size();
-    float accuracy = static_cast<float>(correct_predictions) / images.size();
-
-    std::cout << "\nEpoch " << epoch + 1 << "/" << epochs << " completed in "
-      << epoch_duration.count() << " seconds" << std::endl;
-    std::cout << "Average Loss: " << avg_loss << std::endl;
-    std::cout << "Accuracy: " << accuracy * 100 << "%" << std::endl;
-    std::cout << std::string(50, '-') << std::endl;
-  }
-
-  auto total_end_time = std::chrono::high_resolution_clock::now();
-  std::chrono::duration<double> total_duration = total_end_time - total_start_time;
-  std::cout << "\nTraining completed in " << total_duration.count() << " seconds" << std::endl;
-
-}
-
-float CNN::evaluate(const std::vector<std::vector<float>>& images, const std::vector<int>& labels,
-  std::vector<int>& correct_indices, std::vector<int>& incorrect_indices) {
-  int correct_predictions = 0;
-
-  // Predict all images and categorize them
-  for (size_t i = 0; i < images.size(); ++i) {
-    int predicted_label = predict(images[i]);
-    if (predicted_label == labels[i]) {
-      correct_indices.push_back(i);
-      correct_predictions++;
-    }
-    else {
-      incorrect_indices.push_back(i);
-    }
-  }
-
-  return static_cast<float>(correct_predictions) / images.size();
-}
-
-
-int CNN::predict(const std::vector<float>& image) {
-  auto output = forward(image);
-  return std::max_element(output.begin(), output.end()) - output.begin();
-}
-
-std::unique_ptr<CNN> create_default_cnn() {
-  std::vector<std::unique_ptr<Layer>> layers;
-  layers.push_back(std::make_unique<ConvLayer>(1, 16, 3, 1, 28, 28));
-  layers.push_back(std::make_unique<ReLULayer>());
-  layers.push_back(std::make_unique<MaxPoolLayer>(2, 2, 26, 26, 16));
-  layers.push_back(std::make_unique<FCLayer>(13 * 13 * 16, 10));
-  layers.push_back(std::make_unique<SigmoidLayer>());
-  return std::make_unique<CNN>(std::move(layers));
-}
