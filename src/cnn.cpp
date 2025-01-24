@@ -97,24 +97,28 @@ void CNN::update(float learning_rate) {
   }
 }
 
-void CNN::train(const std::vector<std::vector<float>>& images,
+// train returns a tuple of training and test accuracies
+void CNN::train(
+  const std::vector<std::vector<float>>& images,
   const std::vector<int>& labels,
+  const std::vector<std::vector<float>>& test_images,
+  const std::vector<int>& test_labels,
   int epochs, int batch_size, float learning_rate) {
   std::vector<int> indices(images.size());
   std::iota(indices.begin(), indices.end(), 0);
   std::random_device rd;
   std::mt19937 g(rd());
 
-  std::cout << "Starting training process..." << std::endl;
+  std::cout << "\nStarting training process..." << std::endl;
   std::cout << "Total images: " << images.size() << std::endl;
   std::cout << "Epochs: " << epochs << std::endl;
   std::cout << "Batch size: " << batch_size << std::endl;
   std::cout << "Learning rate: " << learning_rate << "\n" << std::endl;
   std::cout << std::string(50, '*') << std::endl;
-  std::cout << std::fixed << std::setprecision(4);
   
-
   auto total_start_time = std::chrono::high_resolution_clock::now();
+  float test_accuracy = 0.0f;
+  float train_accuracy = 0.0f;
 
   for (int epoch = 0; epoch < epochs; ++epoch) {
     std::shuffle(indices.begin(), indices.end(), g);
@@ -125,6 +129,7 @@ void CNN::train(const std::vector<std::vector<float>>& images,
 
     auto epoch_start_time = std::chrono::high_resolution_clock::now();
 
+    float batch_accuracy = 0.0f;
     for (int batch = 0; batch < total_batches; ++batch) {
       int start_idx = batch * batch_size;
       int end_idx = std::min(static_cast<int>(images.size()), (batch + 1) * batch_size);
@@ -165,11 +170,11 @@ void CNN::train(const std::vector<std::vector<float>>& images,
 
       // Print batch progress
       if ((batch + 1) % 10 == 0 || batch == total_batches - 1) {
-        float batch_accuracy = static_cast<float>(batch_correct) / current_batch_size;
+        batch_accuracy = static_cast<float>(batch_correct) / current_batch_size;
         std::cout << "Epoch " << epoch + 1 << "/" << epochs
           << ", Batch " << batch + 1 << "/" << total_batches
-          << ", Loss: " << batch_loss / current_batch_size
-          << ", Accuracy: " << batch_accuracy * 100 << "%" << std::endl;
+          << ", Loss: " << std::fixed << std::setprecision(4) << batch_loss / current_batch_size
+          << ", Accuracy: " << std::fixed << std::setprecision(1) << batch_accuracy * 100 << "%" << std::endl;
       }
     }
 
@@ -177,34 +182,34 @@ void CNN::train(const std::vector<std::vector<float>>& images,
     std::chrono::duration<double> epoch_duration = epoch_end_time - epoch_start_time;
 
     float avg_loss = total_loss / images.size();
-    float accuracy = static_cast<float>(correct_predictions) / images.size();
+    test_accuracy = evaluate(test_images, test_labels);
+    train_accuracy = static_cast<float>(correct_predictions) / images.size();
 
     std::cout << "\nEpoch " << epoch + 1 << "/" << epochs << " completed in "
       << epoch_duration.count() << " seconds" << std::endl;
-    std::cout << "Average Loss: " << avg_loss << std::endl;
-    std::cout << "Accuracy: " << accuracy * 100 << "%" << std::endl;
+    std::cout << "Average Loss: " << std::fixed << std::setprecision(4) << avg_loss << std::endl;
+    std::cout << "Train Accuracy: " << std::fixed << std::setprecision(1) << train_accuracy * 100 << "%" << std::endl;
+    std::cout << "Test Accuracy: " << std::fixed << std::setprecision(1) << test_accuracy * 100 << "%" << std::endl;
     std::cout << std::string(50, '-') << std::endl;
   }
 
   auto total_end_time = std::chrono::high_resolution_clock::now();
   std::chrono::duration<double> total_duration = total_end_time - total_start_time;
-  std::cout << "\nTraining completed in " << total_duration.count() << " seconds" << std::endl;
+  std::cout << "\nTraining completed in " << total_duration.count() << " seconds with:" << std::endl;
+  std::cout << "   Train accuracy: " << std::fixed << std::setprecision(2) << train_accuracy * 100.0f << "%" << std::endl;
+  std::cout << "   Test accuracy: " << std::fixed << std::setprecision(2) << test_accuracy * 100.0f << "%\n" << std::endl;
 
+  return;
 }
 
-float CNN::evaluate(const std::vector<std::vector<float>>& images, const std::vector<int>& labels,
-  std::vector<int>& correct_indices, std::vector<int>& incorrect_indices) {
+float CNN::evaluate(const std::vector<std::vector<float>>& images, const std::vector<int>& labels) {
   int correct_predictions = 0;
 
   // Predict all images and categorize them
   for (int i = 0; i < images.size(); ++i) {
     int predicted_label = predict(images[i]);
     if (predicted_label == labels[i]) {
-      correct_indices.push_back(i);
       correct_predictions++;
-    }
-    else {
-      incorrect_indices.push_back(i);
     }
   }
 
