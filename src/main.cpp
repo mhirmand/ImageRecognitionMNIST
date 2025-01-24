@@ -5,6 +5,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <fstream>
 #include "cnn.h"
 #include "mnist_loader.h"
 
@@ -59,12 +60,21 @@ int main(int argc, char* argv[]) {
   try {
     Config cfg = parse_arguments(argc, argv);
 
+    // Open log file
+    std::ofstream log_file("training_log.dat");
+    if (!log_file.is_open()) {
+      throw std::runtime_error("Failed to open log file.");
+    }
+
+    // load MNIST dataset
     MNISTLoader mnist(cfg.data_path);
     auto train_data = mnist.loadTrainingData();
     auto test_data= mnist.loadTestData();
 
+    // train based on the loaded data and report progress
     auto cnn = create_default_cnn();
     cnn->train(
+      log_file,
       std::get<0>(train_data), 
       std::get<1>(train_data), 
       std::get<0>(test_data),
@@ -72,6 +82,9 @@ int main(int argc, char* argv[]) {
       cfg.epochs, 
       cfg.batch_size, 
       cfg.learning_rate);
+
+    // Close log file
+    log_file.close();
   }
 
   catch (const std::exception& e) {

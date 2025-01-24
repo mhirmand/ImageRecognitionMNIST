@@ -15,16 +15,18 @@ public:
   CNN(const CNN&) = delete;
   CNN& operator=(const CNN&) = delete;
 
-  void train(const std::vector<std::vector<float>>& images,
+  void train(
+    std::ofstream& log_file,
+    const std::vector<std::vector<float>>& images,
     const std::vector<int>& labels,
+    const std::vector<std::vector<float>>& test_images,
+    const std::vector<int>& test_labels,
     int epochs = 5,
     int batch_size = 1000,
     float learning_rate = 0.01f);
 
-  float evaluate(const std::vector<std::vector<float>>& images,
-    const std::vector<int>& labels,
-    std::vector<int>& correct_indices,
-    std::vector<int>& incorrect_indices);
+  std::tuple<float, float> evaluate(const std::vector<std::vector<float>>& images,
+    const std::vector<int>& labels);
 
   int predict(const std::vector<float>& image);
 
