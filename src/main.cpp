@@ -54,6 +54,7 @@ Config parse_arguments(int argc, char* argv[]) {
  *    - Computes accuracy and reports it to the console.
  * 6. Handles exceptions and outputs error messages if encountered.
  */
+
 int main(int argc, char* argv[]) {
   try {
     Config cfg = parse_arguments(argc, argv);
@@ -70,6 +71,7 @@ int main(int argc, char* argv[]) {
     std::cout << "Test accuracy: " << accuracy * 100 << "%\n";
 
   }
+
   catch (const std::exception& e) {
     std::cerr << "Error: " << e.what() << "\n";
     return EXIT_FAILURE;

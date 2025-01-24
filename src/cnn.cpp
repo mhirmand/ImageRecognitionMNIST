@@ -12,6 +12,7 @@
 #include <numeric>
 #include <random>
 #include <algorithm>
+#include <iomanip>
 
 /**
  * Convolutional Neural Network (CNN) Overview:
@@ -108,8 +109,10 @@ void CNN::train(const std::vector<std::vector<float>>& images,
   std::cout << "Total images: " << images.size() << std::endl;
   std::cout << "Epochs: " << epochs << std::endl;
   std::cout << "Batch size: " << batch_size << std::endl;
-  std::cout << "Learning rate: " << learning_rate << std::endl;
-  // std::cout << std::fixed << std::setprecision(4);
+  std::cout << "Learning rate: " << learning_rate << "\n" << std::endl;
+  std::cout << std::string(50, '*') << std::endl;
+  std::cout << std::fixed << std::setprecision(4);
+  
 
   auto total_start_time = std::chrono::high_resolution_clock::now();
 
@@ -118,7 +121,7 @@ void CNN::train(const std::vector<std::vector<float>>& images,
 
     float total_loss = 0.0f;
     int correct_predictions = 0;
-    int total_batches = (images.size() + batch_size - 1) / batch_size;
+    int total_batches = (int)((images.size() + batch_size - 1) / batch_size);
 
     auto epoch_start_time = std::chrono::high_resolution_clock::now();
 
@@ -145,10 +148,10 @@ void CNN::train(const std::vector<std::vector<float>>& images,
         int predicted_class = 0;
         float max_output = output[0];
         for (size_t k = 0; k < output.size(); ++k) {
-          loss += std::pow(output[k] - target[k], 2);
+          loss += (float)(std::pow(output[k] - target[k], 2));
           if (output[k] > max_output) {
             max_output = output[k];
-            predicted_class = k;
+            predicted_class = (int)k;
           }
         }
         batch_loss += loss;
@@ -194,7 +197,7 @@ float CNN::evaluate(const std::vector<std::vector<float>>& images, const std::ve
   int correct_predictions = 0;
 
   // Predict all images and categorize them
-  for (size_t i = 0; i < images.size(); ++i) {
+  for (int i = 0; i < images.size(); ++i) {
     int predicted_label = predict(images[i]);
     if (predicted_label == labels[i]) {
       correct_indices.push_back(i);
@@ -211,7 +214,7 @@ float CNN::evaluate(const std::vector<std::vector<float>>& images, const std::ve
 
 int CNN::predict(const std::vector<float>& image) {
   auto output = forward(image);
-  return std::max_element(output.begin(), output.end()) - output.begin();
+  return (int)(std::max_element(output.begin(), output.end()) - output.begin());
 }
 
 /**
@@ -240,7 +243,7 @@ void ConvLayer::initialize_parameters() {
   std::random_device rd;
   std::mt19937 gen(rd());
   std::normal_distribution<> d(0, std::sqrt(2.0 / (in_channels * kernel_size * kernel_size)));
-  for (auto& w : weights) w = d(gen);
+  for (auto& w : weights) w = (float)d(gen);
 
   weight_gradients.resize(weights.size(), 0.0f);
   bias_gradients.resize(biases.size(), 0.0f);
@@ -398,7 +401,7 @@ void FCLayer::initialize_parameters() {
   std::random_device rd;
   std::mt19937 gen(rd());
   std::normal_distribution<> d(0, std::sqrt(2.0 / (input_size + output_size)));
-  for (auto& w : weights) w = d(gen);
+  for (auto& w : weights) w = (float)d(gen);
 
   weight_gradients.resize(weights.size(), 0.0f);
   bias_gradients.resize(biases.size(), 0.0f);
