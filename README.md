@@ -8,11 +8,9 @@ This repository contains a C++ implementation of a minimal Convolutional Neural 
 - [Dataset](#dataset)
 - [Architecture](#architecture)
 - [Usage](#usage)
-  - [Prerequisites](#prerequisites)
   - [Build Instructions](#build-instructions)
   - [Command-Line Arguments](#command-line-arguments)
 - [Results](#results)
-- [Acknowledgments](#acknowledgments)
 
 ## Overview
 
@@ -36,7 +34,7 @@ Each image is a 28x28 grayscale image of a handwritten digit (0-9). The dataset 
 
 ## Architecture
 
-The CNN architecture implemented in this project is as follows:
+The CNN architecture implemented in this project contains the following layers:
 
 1. **Input Layer**: Accepts 28x28 grayscale images.
 2. **Convolutional Layer**: Applies a set of learnable filters to extract features.
@@ -45,7 +43,7 @@ The CNN architecture implemented in this project is as follows:
 5. **Fully Connected Layer**: Maps extracted features to the output classes (digits 0-9).
 6. **Sigmoid Activation**: Produces probabilities for each class.
 
-The default architecture is with 5 layers: ConvLayer -> ReLULayer -> MaxPoolLayer -> FCLayer -> SigmoidLayer
+The default architecture is constructed as `ConvLayer -> ReLULayer -> MaxPoolLayer -> FCLayer -> SigmoidLayer` with
 
 - `ConvLayer` (1 input channel, 16 output channels, 3x3 kernel, stride 1)
 - `ReLULayer`
