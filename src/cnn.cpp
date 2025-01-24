@@ -120,7 +120,7 @@ void CNN::train(
   log_file << "Epochs: " << epochs << std::endl;
   log_file << "Batch size: " << batch_size << std::endl;
   log_file << "Learning rate: " << learning_rate << "\n" << std::endl;
-  log_file << std::string(55, '*') << "\n" << std::endl;
+  log_file << std::string(65, '*') << "\n" << std::endl;
 
   // Write headers
   log_file << std::setw(10) << "Epoch" << "  "
@@ -138,7 +138,7 @@ void CNN::train(
   std::cout << "Epochs: " << epochs << std::endl;
   std::cout << "Batch size: " << batch_size << std::endl;
   std::cout << "Learning rate: " << learning_rate << "\n" << std::endl;
-  std::cout << std::string(55, '*') << std::endl;
+  std::cout << std::string(65, '*') << std::endl;
   
   auto total_start_time = std::chrono::high_resolution_clock::now();
   float test_accuracy = 0.0f, test_loss = 0.0f;
@@ -197,8 +197,8 @@ void CNN::train(
         batch_accuracy = static_cast<float>(batch_correct) / current_batch_size;
         std::cout << "Epoch " << epoch + 1 << "/" << epochs
           << ", Batch " << batch + 1 << "/" << total_batches
-          << ", Loss: " << std::fixed << std::setprecision(4) << batch_loss / current_batch_size
-          << ", Accuracy: " << std::fixed << std::setprecision(2) << batch_accuracy * 100 << "%" << std::endl;
+          << ", Batch Loss: " << std::fixed << std::setprecision(4) << batch_loss / current_batch_size
+          << ", Batch Acc: " << std::fixed << std::setprecision(2) << batch_accuracy * 100 << "%" << std::endl;
         
         auto test_result = evaluate(test_images, test_labels);
         test_loss = std::get<0>(test_result);
@@ -229,7 +229,7 @@ void CNN::train(
     std::cout << "Test Loss: " << std::fixed << std::setprecision(4) << test_loss << std::endl;
     std::cout << "Train Accuracy: " << std::fixed << std::setprecision(2) << train_accuracy * 100 << "%" << std::endl;
     std::cout << "Test Accuracy: " << std::fixed << std::setprecision(2) << test_accuracy * 100 << "%" << std::endl;
-    std::cout << std::string(55, '-') << std::endl;
+    std::cout << std::string(65, '-') << std::endl;
   }
 
   auto total_end_time = std::chrono::high_resolution_clock::now();
