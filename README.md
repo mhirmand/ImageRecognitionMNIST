@@ -75,4 +75,4 @@ Run with `num-of-epoch` = 10, `batch-size` = 500 and `learning-rate` = 0.001
 The training and testing loss are reported during the run and are logged in a `.dat` file written in the run directory. The model achieves an accuracy of approximately ~98% on the MNIST test set using the defult CNN architecture and training parameters described above.
 
 ![image](https://github.com/user-attachments/assets/85e655ee-e04c-41d7-bee5-da27ebe83a04)
-![image](https://github.com/user-attachments/assets/fd4df98c-92e7-42f5-95f6-2453a14bec0b)
+![image](https://github.com/user-attachments/assets/cf404927-5796-4074-b2f4-46a1f4d4dee0)
