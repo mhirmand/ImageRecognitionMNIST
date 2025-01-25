@@ -7,9 +7,8 @@ This repository contains a C++ implementation of a minimal Convolutional Neural 
 - [Overview](#overview)
 - [Dataset](#dataset)
 - [Architecture](#architecture)
-- [Usage](#usage)
-  - [Build Instructions](#build-instructions)
-  - [Command-Line Arguments](#command-line-arguments)
+- [Build Instructions](#build-instructions)
+- [Command-Line Arguments](#command-line-arguments)
 - [Results](#results)
 
 ## Overview
