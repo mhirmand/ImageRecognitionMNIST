@@ -64,11 +64,11 @@ Run with `num-of-epoch` = 10, `batch-size` = 500 and `learning-rate` = 0.001, `s
 
 ## Results
 
-The training and testing loss are reported during the run and are logged in a `.dat` file written in the run directory. The model achieves an accuracy of approximately ~98% on the MNIST test set using the defult CNN architecture and training parameters described above.
+The training and testing loss are reported during the run and are logged in a `.dat` file written in the run directory. The model achieves an accuracy of approximately ~98% on the MNIST test set using the defult CNN architecture and training parameters described above. it is noted that the results could be further improved by adding convolutional layers or by allowing more training epochs. Howevvr, as pointed out earlier, the purpose of this project is to demonstrate the core concepts of CNNs and the bottom-up implementation of the basic Neural Network algorithms.
 
 <div align="center">
 
-<img src="https://github.com/user-attachments/assets/872a2d84-9193-4d1b-a265-75e2e9f21f58" width="600" height="352">
-<img src="https://github.com/user-attachments/assets/4250ea4c-6b53-4ce4-ad8e-b83d9bbd95bb" width="600" height="352">
+<img src="https://github.com/user-attachments/assets/519d99af-6a05-47b4-8902-ae3add075ef1" width="600" height="352">
+<img src="https://github.com/user-attachments/assets/d50b8d5d-7cc9-4ee4-9204-ee3147cd34bb" width="600" height="352">
 </div>
 
