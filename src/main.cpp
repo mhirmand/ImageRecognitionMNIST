@@ -15,12 +15,14 @@
  * - epochs: Number of training iterations (default: 5).
  * - batch_size: Number of samples per training batch (default: 1000).
  * - learning_rate: Step size for gradient descent (default: 0.01).
+ * - seed: Seed for random number generation (default: 42).
  */
 struct Config {
   std::string data_path;
   int epochs = 5;
   int batch_size = 1000;
   float learning_rate = 0.01f;
+  int seed = 42;
 };
 
 /**
@@ -37,6 +39,7 @@ Config parse_arguments(int argc, char* argv[]) {
   if (argc > 2) cfg.epochs = std::stoi(argv[2]);
   if (argc > 3) cfg.batch_size = std::stoi(argv[3]);
   if (argc > 4) cfg.learning_rate = std::stof(argv[4]);
+  if (argc > 5) cfg.seed = std::stoi(argv[5]);
   return cfg;
 }
 
@@ -72,7 +75,7 @@ int main(int argc, char* argv[]) {
     auto test_data= mnist.loadTestData();
 
     // train based on the loaded data and report progress
-    auto cnn = create_default_cnn();
+    auto cnn = create_default_cnn(cfg.seed);
     cnn->train(
       log_file,
       std::get<0>(train_data), 
@@ -81,7 +84,8 @@ int main(int argc, char* argv[]) {
       std::get<1>(test_data),
       cfg.epochs, 
       cfg.batch_size, 
-      cfg.learning_rate);
+      cfg.learning_rate,
+      cfg.seed);
 
     // Close log file
     log_file.close();

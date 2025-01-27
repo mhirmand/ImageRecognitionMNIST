@@ -10,7 +10,7 @@
  */
 class FCLayer : public Layer {
 public:
-  FCLayer(int input_size, int output_size);
+  FCLayer(int input_size, int output_size, int seed);
   void forward(const std::vector<float>& input, std::vector<float>& output) override;
   void backward(const std::vector<float>& input, const std::vector<float>& output,
     const std::vector<float>& output_gradient, std::vector<float>& input_gradient) override;
@@ -21,7 +21,7 @@ private:
   std::vector<float> weights, biases;
   std::vector<float> weight_gradients, bias_gradients;
 
-  void initialize_parameters();
+  void initialize_parameters(int seed);
 };
 
 // Implementation in cnn.cpp

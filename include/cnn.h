@@ -21,9 +21,10 @@ public:
     const std::vector<int>& labels,
     const std::vector<std::vector<float>>& test_images,
     const std::vector<int>& test_labels,
-    int epochs = 5,
-    int batch_size = 1000,
-    float learning_rate = 0.01f);
+    int epochs,
+    int batch_size,
+    float learning_rate,
+    int seed);
 
   std::tuple<float, float> evaluate(const std::vector<std::vector<float>>& images,
     const std::vector<int>& labels);
@@ -39,4 +40,4 @@ private:
 };
 
 // Factory function
-std::unique_ptr<CNN> create_default_cnn();
+std::unique_ptr<CNN> create_default_cnn(int seed);

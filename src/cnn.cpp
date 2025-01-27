@@ -40,12 +40,12 @@
  * 4. Output: The network outputs probabilities for each of the 10 digit classes (0-9).
  */
 
-std::unique_ptr<CNN> create_default_cnn() {
+std::unique_ptr<CNN> create_default_cnn(int seed) {
   std::vector<std::unique_ptr<Layer>> layers;
-  layers.push_back(std::make_unique<ConvLayer>(1, 16, 3, 1, 28, 28));
+  layers.push_back(std::make_unique<ConvLayer>(1, 16, 3, 1, 28, 28, seed));
   layers.push_back(std::make_unique<ReLULayer>());
   layers.push_back(std::make_unique<MaxPoolLayer>(2, 2, 26, 26, 16));
-  layers.push_back(std::make_unique<FCLayer>(13 * 13 * 16, 10));
+  layers.push_back(std::make_unique<FCLayer>(13 * 13 * 16, 10, seed));
   layers.push_back(std::make_unique<SoftMaxLayer>());
   return std::make_unique<CNN>(std::move(layers));
 }
@@ -108,11 +108,11 @@ void CNN::train(
   const std::vector<int>& labels,
   const std::vector<std::vector<float>>& test_images,
   const std::vector<int>& test_labels,
-  int epochs, int batch_size, float learning_rate) {
+  int epochs, int batch_size, float learning_rate, int seed) {
   std::vector<int> indices(images.size());
   std::iota(indices.begin(), indices.end(), 0);
-  std::random_device rd;
-  std::mt19937 g(rd());
+  // std::random_device rd;
+  std::mt19937 g(seed);
 
   // Write initial training info to log file
   log_file << "Starting training process..." << std::endl;
@@ -298,22 +298,22 @@ int CNN::predict(const std::vector<float>& image) {
  * - Parameter update: Adjusts weights and biases using gradients.
  */
 ConvLayer::ConvLayer(int in_channels, int out_channels, int kernel_size,
-  int stride, int input_height, int input_width)
+  int stride, int input_height, int input_width, int seed)
   : in_channels(in_channels), out_channels(out_channels),
   kernel_size(kernel_size), stride(stride),
   input_height(input_height), input_width(input_width) {
 
   output_height = (input_height - kernel_size) / stride + 1;
   output_width = (input_width - kernel_size) / stride + 1;
-  initialize_parameters();
+  initialize_parameters(seed);
 }
 
-void ConvLayer::initialize_parameters() {
+void ConvLayer::initialize_parameters(int seed) {
   weights.resize(out_channels * in_channels * kernel_size * kernel_size);
   biases.resize(out_channels, 0.0f);
 
-  std::random_device rd;
-  std::mt19937 gen(rd());
+  // std::random_device rd;
+  std::mt19937 gen(seed);
   std::normal_distribution<> d(0, std::sqrt(2.0 / (in_channels * kernel_size * kernel_size)));
   for (auto& w : weights) w = (float)d(gen);
 
@@ -461,17 +461,17 @@ void MaxPoolLayer::update(float learning_rate) {
  * - Backward pass: Calculates gradients for weights, biases, and input.
  * - Parameter update: Adjusts weights and biases using gradients.
  */
-FCLayer::FCLayer(int input_size, int output_size)
+FCLayer::FCLayer(int input_size, int output_size, int seed)
   : input_size(input_size), output_size(output_size) {
-  initialize_parameters();
+  initialize_parameters(seed);
 }
 
-void FCLayer::initialize_parameters() {
+void FCLayer::initialize_parameters(int seed) {
   weights.resize(input_size * output_size);
   biases.resize(output_size, 0.0f);
 
-  std::random_device rd;
-  std::mt19937 gen(rd());
+  // std::random_device rd;
+  std::mt19937 gen(seed);
   std::normal_distribution<> d(0, std::sqrt(2.0 / (input_size + output_size)));
   for (auto& w : weights) w = (float)d(gen);
 
