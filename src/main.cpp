@@ -50,7 +50,7 @@ Config parse_arguments(int argc, char* argv[]) {
  * 2. Loads the MNIST dataset using MNISTLoader.
  *    - The training data is split into images and labels.
  * 3. Initializes the CNN with the following default architecture:
- *    - ConvLayer -> ReLULayer -> MaxPoolLayer -> FCLayer -> SigmoidLayer
+ *    - ConvLayer -> ReLULayer -> MaxPoolLayer -> FCLayer -> SoftMax
  * 4. Trains the CNN on the training dataset for a specified number of epochs.
  *    - The training process includes forward propagation, backpropagation, and parameter updates.
  *    - Prints batch-wise loss and accuracy.

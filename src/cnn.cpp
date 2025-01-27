@@ -33,9 +33,9 @@
  *      - Reduces the spatial size of feature maps to 13x13 using a pooling window of 2x2 and stride 2.
  *    - **FCLayer**:
  *      - Fully connected layer with 16x13x13=2704 inputs and 10 outputs (one for each digit class).
- *    - **SigmoidLayer**: Applies the sigmoid activation function to produce normalized outputs.
+ *    - **SoftMaxLayer**: Applies the softmax activation function to produce probabilities.
  * 3. Training Process:
- *    - Optimizes the network using Mean Squared Error (MSE) loss.
+ *    - Optimizes the network using cross entropy loss.
  *    - Parameters (weights and biases) are updated using gradient descent with the specified learning rate.
  * 4. Output: The network outputs probabilities for each of the 10 digit classes (0-9).
  */
