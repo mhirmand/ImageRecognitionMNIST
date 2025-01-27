@@ -7,6 +7,7 @@
 #include "layers/fc_layer.h"
 #include "layers/relu_layer.h"
 #include "layers/sigmoid_layer.h"
+#include "layers/softmax_layer.h"
 #include <iostream>
 #include <chrono>
 #include <numeric>
@@ -45,7 +46,7 @@ std::unique_ptr<CNN> create_default_cnn() {
   layers.push_back(std::make_unique<ReLULayer>());
   layers.push_back(std::make_unique<MaxPoolLayer>(2, 2, 26, 26, 16));
   layers.push_back(std::make_unique<FCLayer>(13 * 13 * 16, 10));
-  layers.push_back(std::make_unique<SigmoidLayer>());
+  layers.push_back(std::make_unique<SoftMaxLayer>());
   return std::make_unique<CNN>(std::move(layers));
 }
 
@@ -134,7 +135,7 @@ void CNN::train(
   // Write initial training info to console window
   std::cout << "\nStarting training process..." << std::endl;
   std::cout << "Total training images: " << images.size() << std::endl;
-  std::cout << "Total testing images: " << images.size() << std::endl;
+  std::cout << "Total testing images: " << test_images.size() << std::endl;
   std::cout << "Epochs: " << epochs << std::endl;
   std::cout << "Batch size: " << batch_size << std::endl;
   std::cout << "Learning rate: " << learning_rate << "\n" << std::endl;
@@ -143,6 +144,21 @@ void CNN::train(
   auto total_start_time = std::chrono::high_resolution_clock::now();
   float test_accuracy = 0.0f, test_loss = 0.0f;
   float train_accuracy = 0.0f;
+
+  auto test_result = evaluate(test_images, test_labels);
+  test_loss = std::get<0>(test_result);
+  test_accuracy = std::get<1>(test_result);
+
+  // print out initial test loss and accuracy
+  std::cout << "\nStarte with " << std::endl;
+  std::cout << "  Test Loss: " << std::fixed << std::setprecision(4) << test_loss << std::endl;
+  std::cout << "  Test Accuracy: " << std::fixed << std::setprecision(2) << test_accuracy * 100 << "%" << std::endl;
+  std::cout << std::string(65, '-') << std::endl;
+
+  log_file << "\nStarte with " << std::endl;
+  log_file << "  Test Loss: " << std::fixed << std::setprecision(4) << test_loss << std::endl;
+  log_file << "  Test Accuracy: " << std::fixed << std::setprecision(2) << test_accuracy * 100 << "%" << std::endl;
+  log_file << std::string(65, '-') << std::endl;
 
   for (int epoch = 0; epoch < epochs; ++epoch) {
     std::shuffle(indices.begin(), indices.end(), g);
@@ -172,18 +188,15 @@ void CNN::train(
         backward(image, target);
         update(learning_rate);
 
-        // Compute loss and accuracy
+        // Compute Cross-Entropy Loss
         float loss = 0.0f;
-        int predicted_class = 0;
-        float max_output = output[0];
         for (size_t k = 0; k < output.size(); ++k) {
-          loss += (float)(std::pow(output[k] - target[k], 2));
-          if (output[k] > max_output) {
-            max_output = output[k];
-            predicted_class = (int)k;
-          }
+          loss -= target[k] * std::log(output[k] + 1e-10f);  // Add small epsilon to avoid log(0)
         }
         batch_loss += loss;
+
+        // Compute accuracy
+        int predicted_class = static_cast<int>(std::max_element(output.begin(), output.end()) - output.begin());
         if (predicted_class == labels[idx]) {
           ++batch_correct;
         }
@@ -260,7 +273,7 @@ std::tuple<float, float> CNN::evaluate(const std::vector<std::vector<float>>& im
     int predicted_label = static_cast<int>(std::max_element(prediction.begin(), prediction.end()) - prediction.begin());
     // int predicted_label = predict(images[i]);
     for (size_t j = 0; j < prediction.size(); ++j) {
-      loss += (float)(std::pow(prediction[j] - target[j], 2));
+      loss -= target[j] * std::log(prediction[j] + 1e-10f);
 		}
     if (predicted_label == labels[i]) {
       correct_predictions++;
