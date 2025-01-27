@@ -1,24 +1,21 @@
 # Convolutional Neural Network (CNN) for MNIST Image Recognition
 
-This repository contains a C++ implementation of a minimal Convolutional Neural Network (CNN) designed for image recognition using the MNIST handwritten digits dataset. The purpose of the code is to demonstrates the core concepts of CNNs, including convolutional layers, pooling layers, fully connected layers, and activation functions.
+This repository contains a C++ implementation of a minimal Convolutional Neural Network (CNN) designed for image recognition using the MNIST handwritten digits dataset. The primary purpose of the code is to demonstrates the core concepts of CNNs and their implementation, including convolutional layers, pooling layers, fully connected layers, and activation functions.
 
 ## Table of Contents
 
 - [Overview](#overview)
 - [Dataset](#dataset)
 - [Architecture](#architecture)
-- [Usage](#usage)
-  - [Build Instructions](#build-instructions)
-  - [Command-Line Arguments](#command-line-arguments)
+- [Build Instructions](#build-instructions)
+- [Command-Line Arguments](#command-line-arguments)
 - [Results](#results)
 
 ## Overview
 
-This project implements a CNN from scratch in C++ to classify handwritten digits from the MNIST dataset. The MNIST dataset consists of 28x28 grayscale images of digits (0-9), making it a standard benchmark for image recognition tasks. The CNN architecture includes convolutional layers, max-pooling layers, fully connected layers, and activation functions like ReLU and Sigmoid.
+This project implements a CNN from scratch in C++ to classify handwritten digits from the MNIST dataset. The MNIST dataset consists of 28x28 grayscale images of digits (0-9), making it a standard benchmark for image recognition tasks. The CNN architecture includes convolutional layers, max-pooling layers, fully connected layers, and activation functions like ReLU and Sigmoid. This implementation is inspired by classic CNN architectures and modern C++ practices.
 
 Features:
-
-This implementation is inspired by classic CNN architectures and modern C++ practices.
 
 - **Modular Design**: The code is organized into separate classes for each layer type (convolutional, pooling, fully connected, etc.), making it easy to extend or modify.
 - **Training and Evaluation**: Includes functions for training the network, evaluating its performance, and making predictions on new images.
@@ -57,17 +54,28 @@ All .cpp source files are located in the `src` folder and all .h header files ar
 
 ### Command-Line Arguments
 
-- `--dataset_path` : location of the MNIST training and test dataset. 
-- `--epochs`: Number of training epochs (default: 5)
-- `--batch-size`: Batch size for training (default: 100)
-- `--learning-rate`: Learning rate for optimization (default: 0.01)
+The first argument is the `path\to\dataset` in the run directory and is mandatory. The remaining arguments listed below and are optional. If not provided, the default values will be used. 
+- `num-of-epochs`: Number of training epochs (default: 5)
+- `batch-size`: Batch size for training (default: 100)
+- `learning-rate`: Learning rate for optimization (default: 0.01)
 
-Example:
+Example: Run with default training paramters:
 
 ```bash
-./mnist_cnn /path/to/mnist/dataset --epochs 10 --batch-size 256 --learning-rate 0.001
+./mnist_cnn /path/to/dataset 
+```
+Run with `num-of-epoch` = 10, `batch-size` = 500 and `learning-rate` = 0.001
+```bash
+./mnist_cnn /path/to/dataset 10 500 0.001
 ```
 
 ## Results
 
-The model achieves an accuracy of approximately ~98% on the MNIST test set. 
+The training and testing loss are reported during the run and are logged in a `.dat` file written in the run directory. The model achieves an accuracy of approximately ~98% on the MNIST test set using the defult CNN architecture and training parameters described above.
+
+<div align="center">
+
+<img src="https://github.com/user-attachments/assets/872a2d84-9193-4d1b-a265-75e2e9f21f58" width="600" height="352">
+<img src="https://github.com/user-attachments/assets/4250ea4c-6b53-4ce4-ad8e-b83d9bbd95bb" width="600" height="352">
+</div>
+
