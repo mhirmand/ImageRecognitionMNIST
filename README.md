@@ -31,22 +31,14 @@ Each image is a 28x28 grayscale image of a handwritten digit (0-9). The dataset 
 
 ## Architecture
 
-The CNN architecture implemented in this project contains the following layers:
+The default CNN architecture implemented in this project is constructed as `ConvLayer -> ReLULayer -> MaxPoolLayer -> FCLayer -> SofMaxLayer`
 
 1. **Input Layer**: Accepts 28x28 grayscale images.
-2. **Convolutional Layer**: Applies a set of learnable filters to extract features.
+2. **Convolutional Layer**: Applies a set of learnable filters to extract features. It has 1 input channel, 16 output channels, 3x3 kernel, stride 1. No padding is applied. Feature maps are 26x26.
 3. **ReLU Activation**: Introduces non-linearity to the model.
-4. **Max-Pooling Layer**: Reduces spatial dimensions while retaining important features.
-5. **Fully Connected Layer**: Maps extracted features to the output classes (digits 0-9).
-6. **Sigmoid Activation**: Produces probabilities for each class.
-
-The default architecture is constructed as `ConvLayer -> ReLULayer -> MaxPoolLayer -> FCLayer -> SigmoidLayer` with
-
-- `ConvLayer` (1 input channel, 16 output channels, 3x3 kernel, stride 1)
-- `ReLULayer`
-- `MaxPoolLayer` (2x2 kernel, stride 2)
-- `FCLayer` (13x13x16 input, 10 output)
-- `SigmoidLayer`
+4. **Max-Pooling Layer**: Reduces spatial dimensions while retaining important features. It has 2x2 kernel, stride 2, thus reduces the feature maps to 13x13.
+5. **Fully Connected Layer**: Maps extracted features to the output classes (digits 0-9). 13x13x16=2704 inputa, 10 outputs. 
+6. **SoftMax Activation**: Produces probabilities for each class.
 
 ### Build Instructions
 
@@ -58,15 +50,16 @@ The first argument is the `path\to\dataset` in the run directory and is mandator
 - `num-of-epochs`: Number of training epochs (default: 5)
 - `batch-size`: Batch size for training (default: 100)
 - `learning-rate`: Learning rate for optimization (default: 0.01)
+- `seed`: Seed for random number generation for network initilization and batch selection (default: 42). Enables reproducibility. 
 
 Example: Run with default training paramters:
 
 ```bash
 ./mnist_cnn /path/to/dataset 
 ```
-Run with `num-of-epoch` = 10, `batch-size` = 500 and `learning-rate` = 0.001
+Run with `num-of-epoch` = 10, `batch-size` = 500 and `learning-rate` = 0.001, `seed` = 23
 ```bash
-./mnist_cnn /path/to/dataset 10 500 0.001
+./mnist_cnn /path/to/dataset 10 500 0.001 23
 ```
 
 ## Results
