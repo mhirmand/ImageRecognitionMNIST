@@ -1,4 +1,4 @@
-# Convolutional Neural Network (CNN) for MNIST Image Recognition - C++
+# C++ Convolutional Neural Network (CNN) for MNIST Image Recognition
 
 This repository contains a C++ implementation of a minimal Convolutional Neural Network (CNN) designed for image recognition using the MNIST handwritten digits dataset. The primary purpose of the code is to demonstrates the core concepts of CNNs and their implementation, including convolutional layers, pooling layers, fully connected layers, and activation functions.
 
